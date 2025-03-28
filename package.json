@@ -1,0 +1,15 @@
+{
+  "name": "tugas_1_oprecnetics-2025",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Kevin",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

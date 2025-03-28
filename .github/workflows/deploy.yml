@@ -1,0 +1,61 @@
+name: express-api-deployment
+
+on:
+  push:
+    branches: -master
+
+jobs:
+  docker:
+    runs-on: ubuntu:latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: set up Docker Build
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Copy Docker Compose file to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose.yml"
+          target: ./
+
+      - name: SSH to Server and Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+
+          script: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
+            docker compose up -d
+            docker image prune -f
