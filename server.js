@@ -7,7 +7,7 @@ app.get("/health", (req, res) => {
   res.json({
     nama: "Kevin Leonard Berutu",
     NRP: "5025231089",
-    status: "DOWN",
+    status: "UP",
     timeStamp: new Date().toISOString(),
     uptime: `${Math.floor((Date.now() - startTime) / 1000)}s`,
   });
