@@ -3,7 +3,7 @@ name: express-api-deployment
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   docker:
