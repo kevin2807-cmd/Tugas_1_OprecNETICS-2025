@@ -2,19 +2,20 @@ name: express-api-deployment
 
 on:
   push:
-    branches: -master
+    branches:
+      - master
 
 jobs:
   docker:
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
     steps:
-      - name: checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: set up Docker Build
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
@@ -45,7 +46,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
           source: "docker-compose.yml"
-          target: ./
+          target: "~/"
 
       - name: SSH to Server and Deploy
         uses: appleboy/ssh-action@master
@@ -54,8 +55,9 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
-
           script: |
+            cd ~/
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
+            docker compose down
             docker compose up -d
             docker image prune -f
