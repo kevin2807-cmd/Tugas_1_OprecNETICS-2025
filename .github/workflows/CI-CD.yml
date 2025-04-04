@@ -38,16 +38,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Copy Docker Compose file to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_KEY }}
-          source: "docker-compose.yml"
-          target: "~/"
-
       - name: SSH to Server and Deploy
         uses: appleboy/ssh-action@master
         with:
@@ -56,18 +46,16 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            if ! command -v docker &> /dev/null; then
-              curl -fsSL https://get.docker.com -o get-docker.sh
-              sh get-docker.sh
-            fi
-
-            if [ "$(sudo docker ps -aq -f name=express-api)" ]; then
+            echo "Stopping and removing old container if exists..."
+            if sudo docker ps -a --format '{{.Names}}' | grep -Eq '^express-api$'; then
               sudo docker stop express-api || true
               sudo docker rm express-api || true
             fi
 
+            echo "Pulling latest image..."
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
 
+            echo "Running container..."
             sudo docker run -d \
               --name express-api \
               -p 3000:3000 \
@@ -75,4 +63,5 @@ jobs:
               --restart always \
               ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
 
+            echo "Cleaning up unused images..."
             sudo docker image prune -f
