@@ -46,7 +46,15 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
-            sudo docker compose down
-            sudo docker compose up -d
-            sudo docker image prune -f
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
+
+            if docker ps -a --format '{{.Names}}' | grep -Eq '^express-api$'; then
+              docker stop express-api || true
+              docker rm express-api || true
+            fi
+
+            docker compose down --remove-orphans || true
+
+            docker image prune -f
+
+            docker compose up -d
