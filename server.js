@@ -1,17 +1,15 @@
 const express = require("express");
 
 const app = express();
-const startTime = Date.now();
-
-let uptime = process.uptime();
 
 app.get("/health", (req, res) => {
+  const uptimeInSeconds = process.uptime();
   res.json({
     nama: "Kevin Leonard Berutu",
     NRP: "5025231089",
     status: "UP",
     timeStamp: new Date().toISOString(),
-    uptime: `${uptime}m`,
+    uptime: `${uptimeInSeconds}s`,
   });
 });
 
