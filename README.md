@@ -25,6 +25,7 @@ Berikut penjelasan dari CI-CD.yml
 
 
   **A.**
+  
     Workflow akan dijalankan secara otomatis jika ada push ke branch main
     ```
     on:
@@ -35,47 +36,49 @@ Berikut penjelasan dari CI-CD.yml
 
     
   **B.**
+  
     Berisi Job yang akan dilakukan oleh github actions yang bertugas untuk membangun dan mengirim (push) Docker image dari aplikasi Express API ke Docker Hub setiap kali ada perubahan (push) pada repository.
     Proses dimulai dengan kode yang ada di repo akan di-checkout agar bisa diakses dalam runner. Setelah itu, diatur QEMU dan Docker Buildx yang berguna untuk membangun Docker image. Kemudian dilakukan caching agar instalansi dependencies Node.js lebih cepat jika pipeline dijalankan ulang.
     Setelah itu sistem akan login ke docker hub menggunakan username dan password yang sudah di implementasikan sebelumnya menggunakan kredensial yang disimpan di github secrete.Terakhir, Docker image dari aplikasi akan dibangun dari konteks direktori proyek saat ini (dengan konfigurasi dari Dockerfile), lalu dikirim ke Docker Hub dengan tag latest, menggunakan nama repository sesuai dengan nama pengguna Docker Hub.
     ```
     jobs:
-    docker:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
-  
-        - name: Set up QEMU
-          uses: docker/setup-qemu-action@v3
-  
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v3
-  
-        - name: Cache node_modules
-          uses: actions/cache@v3
-          with:
-            path: ~/.npm
-            key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-            restore-keys: |
-              ${{ runner.os }}-node-
-  
-        - name: Login to Docker Hub
-          uses: docker/login-action@v3
-          with:
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_PASSWORD }}
-  
-        - name: Build and Push Docker Image
-          uses: docker/build-push-action@v5
-          with:
-            context: .
-            push: true
-            tags: ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
-      ```
+     docker:
+       runs-on: ubuntu-latest
+       steps:
+         - name: Checkout Repository
+           uses: actions/checkout@v4
+   
+         - name: Set up QEMU
+           uses: docker/setup-qemu-action@v3
+   
+         - name: Set up Docker Buildx
+           uses: docker/setup-buildx-action@v3
+   
+         - name: Cache node_modules
+           uses: actions/cache@v3
+           with:
+             path: ~/.npm
+             key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+             restore-keys: |
+               ${{ runner.os }}-node-
+   
+         - name: Login to Docker Hub
+           uses: docker/login-action@v3
+           with:
+             username: ${{ secrets.DOCKERHUB_USERNAME }}
+             password: ${{ secrets.DOCKERHUB_PASSWORD }}
+   
+         - name: Build and Push Docker Image
+           uses: docker/build-push-action@v5
+           with:
+             context: .
+             push: true
+             tags: ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
+    ```
 
 
   **C.**
+  
     Berisi job yang akan dijalankan hanya setelah job docker sukses, karena ada deklarasi `needs:docker`. Job ini bertujuan untuk menghubungkan SSH ke Server, lalu melakukan proses update dan restart container aplikasi dengan image terbaru dari Docker hub yang sudah berhasil di pull dari job sebelumnya.
     Langkah pertama yang dilakukan adalah melalukan checkout repository kemudian melakuan remote ke server melalui SSH dengan menggunakan informasi login ke server seperti host, username, port dan key yang telah disimpan secara aman di Github secrets. 
     Setelah berhasil melakukan remote ke server melalui SSH, runner akan ngepull docker image terbaru dari docker hub kemudian menghentikan dan menurunkan container ssat ini yang berjalan bia docker compose, setelah itu menghentikan container lama dan menghapus container lama, ini dilakukan agar saat github actions nya berjalan tidak terpengaruh oleh docker container lain atau apapun itu yang dapat mengganggu proses deployment, setelah itu menghapus image image yang tidak terpakai, dan kemudian menjalan kan ulang container dengan menggunakan docker compose.
