@@ -11,7 +11,7 @@ app.get("/health", (req, res) => {
     NRP: "5025231089",
     status: "UP",
     timeStamp: new Date().toISOString(),
-    uptime: `${uptime}s`,
+    uptime: `${uptime}m`,
   });
 });
 
