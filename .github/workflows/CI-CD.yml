@@ -46,22 +46,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            echo "Stopping and removing old container if exists..."
-            if sudo docker ps -a --format '{{.Names}}' | grep -Eq '^express-api$'; then
-              sudo docker stop express-api || true
-              sudo docker rm express-api || true
-            fi
-
-            echo "Pulling latest image..."
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
-
-            echo "Running container..."
-            sudo docker run -d \
-              --name express-api \
-              -p 3000:3000 \
-              -e NODE_ENV=production \
-              --restart always \
-              ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
-
-            echo "Cleaning up unused images..."
+            sudo docker compose down
+            sudo docker compose up -d
             sudo docker image prune -f

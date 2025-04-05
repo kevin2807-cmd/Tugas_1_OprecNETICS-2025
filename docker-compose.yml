@@ -1,0 +1,9 @@
+services:
+  api:
+    image: callfyt/express-api:latest
+    container_name: express-api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
