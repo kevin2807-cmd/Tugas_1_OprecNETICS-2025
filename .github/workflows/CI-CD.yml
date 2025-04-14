@@ -46,6 +46,10 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            sudo docker --version || (echo "Installing Docker..." && \
+            sudo apt update && sudo apt install -y docker.io docker-compose && \
+            sudo systemctl enable --now docker)
+            
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
             sudo docker compose down
             sudo docker stop express-api
