@@ -53,16 +53,13 @@ jobs:
               sudo apt install -y docker.io
               sudo systemctl enable --now docker
             fi
-          
-            # Install docker compose plugin if needed
-            if ! docker compose version &> /dev/null; then
-              echo "Installing Docker Compose Plugin..."
-              sudo apt install -y docker-compose-plugin
-            fi
-            
+
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
-            sudo docker compose down
             sudo docker stop express-api
             sudo docker rm express-api
             sudo docker image prune -f
-            sudo docker compose up -d
+            sudo docker run -d \
+              --name express-api \
+              -p 3000:3000 \
+              --restart always \
+              ${{ secrets.DOCKERHUB_USERNAME }}/express-api:latest
